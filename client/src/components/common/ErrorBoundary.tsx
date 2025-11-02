@@ -5,7 +5,7 @@ export class ErrorBoundary extends React.Component<{ children: React.ReactNode }
   static getDerivedStateFromError() { return { hasError: true }; }
   componentDidCatch(err: any, info: any) { console.error(err, info); }
   render() {
-    if (this.state.hasError) return <div>Something went wrong. Please refresh.</div>;
+    if (this.state.hasError) return <div className="w-screen h-screen flex items-center justify-center">Something went wrong. Please refresh.</div>;
     return this.props.children;
   }
 }
