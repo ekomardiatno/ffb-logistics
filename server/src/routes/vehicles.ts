@@ -45,3 +45,31 @@ router.delete("/:id", async (req, res, next) => {
     next(err);
   }
 });
+
+// set vehicle status
+router.patch("/:id/status", async (req, res, next) => {
+  try {
+    const v = await Vehicle.findByPk(req.params.id);
+    if (!v) return res.status(404).json({ error: "Vehicle not found" });
+    await v.update({ status: req.body.status });
+    res.json(v);
+  } catch (err) { next(err); }
+});
+
+// assign or unassign driver
+router.patch("/:id/assign-driver", async (req, res, next) => {
+  try {
+    const v = await Vehicle.findByPk(req.params.id);
+    if (!v) return res.status(404).json({ error: "Vehicle not found" });
+    const { driverId } = req.body; // may be null to unassign
+    if (driverId) {
+      const d = await Driver.findByPk(driverId);
+      if (!d) return res.status(400).json({ error: "Driver not found" });
+    }
+    await v.update({ driverId: driverId ?? null });
+    const withDriver = await Vehicle.findByPk(v.id, { include: "driver" });
+    res.json(withDriver);
+  } catch (err) { next(err); }
+});
+
+export default router;

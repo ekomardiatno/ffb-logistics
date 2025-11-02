@@ -40,15 +40,15 @@ async function seed() {
   }
 
   // create trips
-  for (let i = 0; i < 100; i++) {
+  for (let i = 0; i < 10000; i++) {
     const vehicle = vehicles[i % vehicles.length];
     const driver = drivers[i % drivers.length];
     const trip = await Trip.create({
       id: uuidv4(),
       vehicleId: vehicle.id,
       driverId: driver.id,
-      scheduledDate: new Date(Date.now() + (i % 7) * 24 * 60 * 60 * 1000),
-      status: i % 3 === 0 ? "completed" : "scheduled",
+      scheduledDate: new Date(Date.now() - (i + 5) * 16 * 60 * 60 * 1000),
+      status: "completed",
       estimatedDuration: 120
     });
     const numCollections = 1 + (i % 3);

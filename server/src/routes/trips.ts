@@ -80,6 +80,68 @@ router.post("/", async (req, res, next) => {
     next(err);
   }
 });
+
+// update trip status
+router.patch("/:id/status", async (req, res, next) => {
+  try {
+    const trip = await Trip.findByPk(req.params.id);
+    if (!trip) return res.status(404).json({ error: "Trip not found" });
+    await trip.update({ status: req.body.status });
+    res.json(trip);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// edit trip (date, duration, mills collections)
+router.put("/:id", async (req, res, next) => {
+  const t = await sequelize.transaction();
+  try {
+    const { scheduledDate, estimatedDuration, mills } = req.body;
+    const trip = await Trip.findByPk(req.params.id, { transaction: t });
+    if (!trip) return res.status(404).json({ error: "Trip not found" });
+
+    if (scheduledDate || estimatedDuration) {
+      await trip.update(
+        {
+          ...(scheduledDate ? { scheduledDate: new Date(scheduledDate) } : {}),
+          ...(estimatedDuration ? { estimatedDuration } : {}),
+        },
+        { transaction: t }
+      );
+    }
+
+    if (Array.isArray(mills)) {
+      // replace collections
+      await Collection.destroy({ where: { tripId: trip.id }, transaction: t });
+      for (const m of mills) {
+        await Collection.create(
+          {
+            id: uuidv4(),
+            tripId: trip.id,
+            millId: m.millId,
+            collected: Number(m.plannedCollection || 0),
+          },
+          { transaction: t }
+        );
+      }
+    }
+
+    await t.commit();
+    const updated = await Trip.findByPk(trip.id, {
+      include: [
+        "vehicle",
+        "driver",
+        { model: Collection, as: "collections", include: ["mill"] },
+      ],
+    });
+    res.json(updated);
+  } catch (err) {
+    await t.rollback();
+    next(err);
+  }
+});
+
 router.delete("/:id", async (req, res, next) => {
   const t = await sequelize.transaction();
   try {

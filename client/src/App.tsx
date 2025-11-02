@@ -56,6 +56,18 @@ export default function App() {
                 >
                   Dashboard
                 </NavLink>
+                <NavLink
+                  to="/trip-list"
+                  className={({ isActive }) =>
+                    `text-sm ${
+                      isActive
+                        ? "text-blue-700 font-medium"
+                        : "text-gray-600 hover:text-gray-800"
+                    }`
+                  }
+                >
+                  Trips
+                </NavLink>
               </nav>
             </div>
           </header>
@@ -63,6 +75,8 @@ export default function App() {
           <main className="mx-auto max-w-7xl px-4 py-6">
             <Routes>
               <Route path="/" element={<Dashboard />} />
+              <Route path="/planner" element={<TripPlanner />} />
+              <Route path="/trip-list" element={<TripList />} />
             </Routes>
           </main>
         </div>

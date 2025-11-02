@@ -18,7 +18,7 @@ export interface Vehicle {
 export interface Mill {
   id: string;
   name: string;
-  location: { lat: number; lng: number };
+  location: { lat: number; lng: number } | string;
   contactPerson: string;
   phoneNumber: string;
   avgDailyProduction: number;
@@ -29,6 +29,7 @@ export interface Collection {
   tripId: string;
   millId: string;
   collected: number;
+  mill?: Mill;
 }
 
 export interface Trip {
@@ -39,4 +40,9 @@ export interface Trip {
   status: "scheduled" | "in_progress" | "completed" | "cancelled";
   estimatedDuration: number;
   collections?: Collection[];
+}
+
+export interface TripWithDetails extends Trip {
+  vehicle?: Vehicle;
+  driver?: Driver;
 }
