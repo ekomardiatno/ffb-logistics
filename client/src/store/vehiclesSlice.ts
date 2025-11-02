@@ -35,17 +35,25 @@ export const assignVehicleDriver = createAsyncThunk(
 
 export const createVehicle = createAsyncThunk(
   "vehicles/create",
-  async (data: Omit<Vehicle, "id" | "status">) => {
-    const res = await api.post("/vehicles", data);
-    return res.data;
+  async (data: Omit<Vehicle, "id" | "status">, { rejectWithValue }) => {
+    try {
+      const res = await api.post("/vehicles", data);
+      return res.data;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
   }
 );
 
 export const updateVehicle = createAsyncThunk(
   "vehicles/update",
-  async ({ id, data }: { id: string; data: Partial<Vehicle> }) => {
-    const res = await api.put(`/vehicles/${id}`, data);
-    return res.data;
+  async ({ id, data }: { id: string; data: Partial<Vehicle> }, { rejectWithValue }) => {
+    try {
+      const res = await api.put(`/vehicles/${id}`, data);
+      return res.data;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
   }
 );
 

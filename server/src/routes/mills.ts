@@ -1,6 +1,7 @@
 import express from "express";
 import { v4 as uuidv4 } from "uuid";
 import { Mill } from "../models";
+import { CreateMillDto, UpdateMillDto } from "../dto/mills";
 
 const router = express.Router();
 
@@ -13,7 +14,7 @@ router.get("/", async (req, res, next) => {
 
 router.post("/", async (req, res, next) => {
   try {
-    const { avgDailyProduction, contactPerson, phoneNumber, location, name } = req.body;
+    const { avgDailyProduction, contactPerson, phoneNumber, location, name } = CreateMillDto.parse(req.body);
     const mill = await Mill.create({
       id: uuidv4(),
       avgDailyProduction,
@@ -31,7 +32,13 @@ router.put("/:id", async (req, res, next) => {
   try {
     const mill = await Mill.findByPk(req.params.id);
     if (!mill) return res.status(404).json({ error: "Mill not found" });
-    const updateData = { ...req.body };
+    const data = UpdateMillDto.parse(req.body)
+    const updateData: Partial<Mill> = {};
+    if(data.avgDailyProduction !== undefined) updateData.avgDailyProduction = data.avgDailyProduction
+    if(data.contactPerson !== undefined) updateData.contactPerson = data.contactPerson
+    if(data.location !== undefined) updateData.location = JSON.stringify(data.location)
+    if(data.name !== undefined) updateData.name = data.name
+    if(data.phoneNumber !== undefined) updateData.phoneNumber = data.phoneNumber
     if (updateData.location && typeof updateData.location !== "string") {
       updateData.location = JSON.stringify(updateData.location);
     }

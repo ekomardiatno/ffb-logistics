@@ -1,7 +1,8 @@
 import express from "express";
 import { v4 as uuidv4 } from "uuid";
-import { Trip, Vehicle, Collection } from "../models";
+import { Trip, Vehicle, Collection, Driver } from "../models";
 import { sequelize } from "../db";
+import { CreateTripDto, UpdateTripDto } from "../dto/trips";
 
 const router = express.Router();
 
@@ -24,11 +25,17 @@ router.post("/", async (req, res, next) => {
   const t = await sequelize.transaction();
   try {
     const { vehicleId, driverId, mills, scheduledDate, estimatedDuration } =
-      req.body;
+      CreateTripDto.parse(req.body);
     // mills: [{ millId, plannedCollection }]
     // capacity check
     const vehicle = await Vehicle.findByPk(vehicleId);
+    const driver = await Driver.findByPk(driverId);
+
+    if (!driver) throw new Error("Driver not found");
     if (!vehicle) throw new Error("Vehicle not found");
+    if (driver.status !== "available")
+      throw new Error("Driver is not available");
+    if (vehicle.status !== "idle") throw new Error("Vehicle is not idle");
     const totalPlanned = mills.reduce(
       (s: number, m: any) => s + Number(m.plannedCollection || 0),
       0
@@ -44,7 +51,10 @@ router.post("/", async (req, res, next) => {
         vehicleId,
         driverId,
         scheduledDate: new Date(scheduledDate),
-        estimatedDuration: estimatedDuration || 60,
+        estimatedDuration:
+          typeof estimatedDuration === "string"
+            ? Number(estimatedDuration)
+            : estimatedDuration || 60,
         status: "scheduled",
       },
       { transaction: t }
@@ -63,8 +73,13 @@ router.post("/", async (req, res, next) => {
       );
     }
 
-    // mark vehicle and driver on_trip (simple)
     await vehicle.update({ status: "on_trip" }, { transaction: t });
+    await driver.update(
+      { status: "on_trip" },
+      {
+        transaction: t,
+      }
+    );
 
     await t.commit();
     const created = await Trip.findByPk(trip.id, {
@@ -83,12 +98,38 @@ router.post("/", async (req, res, next) => {
 
 // update trip status
 router.patch("/:id/status", async (req, res, next) => {
+  const t = await sequelize.transaction();
   try {
     const trip = await Trip.findByPk(req.params.id);
     if (!trip) return res.status(404).json({ error: "Trip not found" });
-    await trip.update({ status: req.body.status });
+    const status = req.body.status as Trip["status"];
+    if (status === "cancelled" || status === "completed") {
+      await Driver.update(
+        { status: "available" },
+        {
+          where: {
+            id: trip.driverId,
+          },
+          transaction: t,
+        }
+      );
+      await Vehicle.update(
+        { status: "idle" },
+        {
+          where: {
+            id: trip.vehicleId,
+          },
+          transaction: t,
+        }
+      );
+    }
+    await trip.update({ status: req.body.status }, {
+      transaction: t
+    });
+    await t.commit();
     res.json(trip);
   } catch (err) {
+    await t.rollback();
     next(err);
   }
 });
@@ -97,15 +138,15 @@ router.patch("/:id/status", async (req, res, next) => {
 router.put("/:id", async (req, res, next) => {
   const t = await sequelize.transaction();
   try {
-    const { scheduledDate, estimatedDuration, mills } = req.body;
+    const { scheduledDate, estimatedDuration, mills } = UpdateTripDto.parse(req.body);
     const trip = await Trip.findByPk(req.params.id, { transaction: t });
     if (!trip) return res.status(404).json({ error: "Trip not found" });
 
     if (scheduledDate || estimatedDuration) {
       await trip.update(
         {
-          ...(scheduledDate ? { scheduledDate: new Date(scheduledDate) } : {}),
-          ...(estimatedDuration ? { estimatedDuration } : {}),
+          ...(scheduledDate ? { scheduledDate: typeof scheduledDate === 'string' ? new Date(scheduledDate): scheduledDate } : {}),
+          ...(estimatedDuration ? { estimatedDuration: typeof estimatedDuration === 'string' ? Number(estimatedDuration) : estimatedDuration } : {}),
         },
         { transaction: t }
       );

@@ -16,17 +16,25 @@ export const updateDriverStatus = createAsyncThunk(
 );
 
 export const createDriver = createAsyncThunk(
-  "drivers/create", async (data: Omit<Driver, "id">) => {
-    const res = await api.post<Driver>("/drivers", data);
-    return res.data;
+  "drivers/create", async (data: Omit<Driver, "id">, { rejectWithValue }) => {
+    try {
+      const res = await api.post<Driver>("/drivers", data);
+      return res.data;
+    } catch (err) {
+      return rejectWithValue(err);
+    }
   }
 );
 
 export const updateDriver = createAsyncThunk(
   "drivers/update",
-  async ({ id, changes }: { id: string; changes: Partial<Omit<Driver, "id">> }) => {
-    const { data } = await api.put<Driver>(`/drivers/${id}`, changes);
-    return data;
+  async ({ id, changes }: { id: string; changes: Partial<Omit<Driver, "id">> }, { rejectWithValue }) => {
+    try {
+      const { data } = await api.put<Driver>(`/drivers/${id}`, changes);
+      return data;
+    } catch (err) {
+      return rejectWithValue(err);
+    }
   }
 );
 

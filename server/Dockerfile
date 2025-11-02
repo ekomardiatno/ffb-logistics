@@ -7,6 +7,7 @@ WORKDIR /app
 COPY package.json package-lock.json* ./
 RUN npm install
 COPY . .
+RUN npm run migrate
 RUN npm run build
 VOLUME ["/app/data"]
 EXPOSE 4000

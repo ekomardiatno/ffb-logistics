@@ -7,16 +7,24 @@ export const fetchMills = createAsyncThunk("mills/fetch", async () => {
   return res.data;
 });
 
-export const createMill = createAsyncThunk("mills/create", async (data: Omit<Mill, "id">) => {
-  const res = await api.post("/mills", data);
-  return res.data;
+export const createMill = createAsyncThunk("mills/create", async (data: Omit<Mill, "id">, { rejectWithValue }) => {
+  try {
+    const res = await api.post("/mills", data);
+    return res.data;
+  } catch (err) {
+    return rejectWithValue(err)
+  }
 });
 
 export const updateMill = createAsyncThunk(
   "mills/update",
-  async ({ id, data }: { id: string; data: Partial<Mill> }) => {
-    const res = await api.put(`/mills/${id}`, data);
-    return res.data;
+  async ({ id, data }: { id: string; data: Partial<Mill> }, { rejectWithValue }) => {
+    try {
+      const res = await api.put(`/mills/${id}`, data);
+      return res.data;
+    } catch (err) {
+      return rejectWithValue(err)
+    }
   }
 );
 

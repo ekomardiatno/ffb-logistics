@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import type { Mill, Trip } from "../../types";
 import { createPortal } from "react-dom";
+import { FaCircleExclamation } from "react-icons/fa6";
 
 export default function EditTripModal({
   open, onClose, trip, mills, onSave
@@ -16,6 +17,7 @@ export default function EditTripModal({
   const [rows, setRows] = useState<{ millId: string; plannedCollection: number }[]>(
     (trip.collections || []).map(c => ({ millId: c.millId, plannedCollection: c.collected }))
   );
+  const [error, setError] = useState<Error | null>(null)
 
   const capacity = 12; // per assignment
   const total = useMemo(() => rows.reduce((s, r) => s + (Number(r.plannedCollection) || 0), 0), [rows]);
@@ -88,6 +90,12 @@ export default function EditTripModal({
         </div>
 
         <div className="mt-4 flex items-center justify-end gap-2">
+          {error && (
+            <div className="text-red-500 text-xs italic mr-auto flex items-center gap-1">
+              <FaCircleExclamation />
+              <span>{error.message}</span>
+            </div>
+          )}
           <button
             className="rounded-xl border px-4 py-2 hover:bg-gray-50"
             onClick={onClose}
@@ -95,11 +103,26 @@ export default function EditTripModal({
           <button
             disabled={total > capacity}
             className="rounded-xl bg-blue-600 px-4 py-2 font-medium text-white disabled:opacity-50"
-            onClick={() => onSave({
-              scheduledDate: new Date(date).toISOString(),
-              estimatedDuration: duration,
-              mills: rows
-            })}
+            onClick={() => {
+              setError(null)
+              if(mills.length < 1) {
+                setError(new Error('Collection is required'))
+                return;
+              }
+              if(!duration) {
+                setError(new Error('Estimated duration is required'))
+                return;
+              }
+              if(!date) {
+                setError(new Error('Scheduled is required'))
+                return;
+              }
+              onSave({
+                scheduledDate: new Date(date).toISOString(),
+                estimatedDuration: duration,
+                mills: rows
+              })
+            }}
           >Save</button>
         </div>
       </div>

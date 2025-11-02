@@ -4,6 +4,8 @@ import vehiclesRouter from "./routes/vehicles";
 import driversRouter from "./routes/drivers";
 import millsRouter from "./routes/mills";
 import tripsRouter from "./routes/trips";
+import { ZodError } from "zod";
+import { formatZodError } from "./utils";
 
 const app = express();
 app.use(cors());
@@ -19,6 +21,9 @@ app.get("/api/health", (req, res) => res.json({ ok: true }));
 // simple error handler
 app.use((err: any, req: any, res: any, next: any) => {
   console.error(err);
+  if(err instanceof ZodError) {
+    return res.status(400).json({ error: "Validation error", details: formatZodError(err) });
+  }
   res.status(500).json({ error: err.message || "internal error" });
 });
 

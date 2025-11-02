@@ -1,6 +1,7 @@
 import express from "express";
 import { v4 as uuidv4 } from "uuid";
-import { Driver, Vehicle } from "../models";
+import { Driver, Trip, Vehicle } from "../models";
+import { CreateVehicleDto, UpdateVehicleDto } from "../dto/vehicles";
 
 const router = express.Router();
 
@@ -13,7 +14,7 @@ router.get("/", async (req, res, next) => {
 
 router.post("/", async (req, res, next) => {
   try {
-    const { plateNumber, type, capacity, driverId } = req.body;
+    const { plateNumber, type, capacity, driverId } = CreateVehicleDto.parse(req.body);
     const vehicle = await Vehicle.create({
       id: uuidv4(),
       plateNumber,
@@ -29,7 +30,13 @@ router.put("/:id", async (req, res, next) => {
   try {
     const vehicle = await Vehicle.findByPk(req.params.id);
     if (!vehicle) return res.status(404).json({ error: "Vehicle not found" });
-    await vehicle.update(req.body);
+    const { plateNumber, type, capacity, driverId } = UpdateVehicleDto.parse(req.body);
+    const data: Partial<Vehicle> = {};
+    if(plateNumber !== undefined) data.plateNumber = plateNumber;
+    if(type !== undefined) data.type = type;
+    if(capacity !== undefined) data.capacity = capacity;
+    if(driverId !== undefined) data.driverId = driverId;
+    await vehicle.update(data);
     res.json(vehicle);
   } catch (err) {
     next(err);
@@ -50,8 +57,16 @@ router.delete("/:id", async (req, res, next) => {
 router.patch("/:id/status", async (req, res, next) => {
   try {
     const v = await Vehicle.findByPk(req.params.id);
+    const lastTrip = await Trip.findOne({
+      where: {
+        vehicleId: req.params.id
+      },
+      order: [[ 'scheduledDate', 'DESC' ]]
+    })
     if (!v) return res.status(404).json({ error: "Vehicle not found" });
-    await v.update({ status: req.body.status });
+    const status = req.body.status as Vehicle['status'];
+    if(v.status === 'on_trip' && lastTrip?.status === 'in_progress' || lastTrip?.status === 'scheduled') throw new Error('Vehicle is on trip');
+    await v.update({ status });
     res.json(v);
   } catch (err) { next(err); }
 });

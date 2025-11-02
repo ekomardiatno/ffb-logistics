@@ -15,9 +15,13 @@ export const createTrip = createAsyncThunk(
     mills: { millId: string; plannedCollection: number }[];
     scheduledDate: string;
     estimatedDuration: number;
-  }) => {
-    const res = await api.post<Trip>("/trips", payload);
-    return res.data;
+  }, { rejectWithValue }) => {
+    try {
+      const res = await api.post<Trip>("/trips", payload);
+      return res.data;
+    } catch (err) {
+      return rejectWithValue(err)
+    }
   }
 );
 
