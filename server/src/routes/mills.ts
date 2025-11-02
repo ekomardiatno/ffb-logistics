@@ -19,7 +19,7 @@ router.post("/", async (req, res, next) => {
       avgDailyProduction,
       contactPerson,
       phoneNumber,
-      location,
+      location: JSON.stringify(location),
       name
     });
     res.status(201).json(mill);

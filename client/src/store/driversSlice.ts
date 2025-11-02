@@ -6,6 +6,30 @@ export const fetchDrivers = createAsyncThunk("drivers/fetch", async () => {
   const res = await api.get<Driver[]>("/drivers");
   return res.data;
 });
+
+export const updateDriverStatus = createAsyncThunk(
+  "drivers/updateStatus",
+  async ({ id, status }: { id: string; status: "available" | "on_trip" | "inactive" }) => {
+    const { data } = await api.patch<Driver>(`/drivers/${id}/status`, { status });
+    return data;
+  }
+);
+
+export const createDriver = createAsyncThunk(
+  "drivers/create", async (data: Omit<Driver, "id">) => {
+    const res = await api.post<Driver>("/drivers", data);
+    return res.data;
+  }
+);
+
+export const updateDriver = createAsyncThunk(
+  "drivers/update",
+  async ({ id, changes }: { id: string; changes: Partial<Omit<Driver, "id">> }) => {
+    const { data } = await api.put<Driver>(`/drivers/${id}`, changes);
+    return data;
+  }
+);
+
 interface DriversState {
   items: Driver[];
   loading: boolean;
@@ -29,6 +53,20 @@ const driversSlice = createSlice({
     builder.addCase(fetchDrivers.rejected, (state, action) => {
       state.loading = false;
       state.error = action.error.message ?? "Failed to load drivers";
+    });
+
+    builder.addCase(updateDriverStatus.fulfilled, (s, a) => {
+      const i = s.items.findIndex(d => d.id === a.payload.id);
+      if (i >= 0) s.items[i] = a.payload;
+    });
+
+    builder.addCase(createDriver.fulfilled, (state, action) => {
+      state.items.unshift(action.payload);
+    });
+
+    builder.addCase(updateDriver.fulfilled, (s, a) => {
+      const i = s.items.findIndex(d => d.id === a.payload.id);
+      if (i >= 0) s.items[i] = a.payload;
     });
   }
 });

@@ -49,4 +49,14 @@ router.delete("/:id", async (req, res, next) => {
   }
 });
 
+// set availability/status
+router.patch("/:id/status", async (req, res, next) => {
+  try {
+    const d = await Driver.findByPk(req.params.id);
+    if (!d) return res.status(404).json({ error: "Driver not found" });
+    await d.update({ status: req.body.status });
+    res.json(d);
+  } catch (e) { next(e); }
+});
+
 export default router;

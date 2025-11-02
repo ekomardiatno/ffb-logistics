@@ -8,6 +8,10 @@ import TripList from "./components/trip/TripList";
 import { useState } from "react";
 import classNames from "classnames";
 import { FaBars } from "react-icons/fa6";
+import DriverForm from "./components/management/DriverForm";
+import VehicleForm from "./components/management/VehicleForm";
+import MillManager from "./components/management/MillManagement";
+import MillForm from "./components/management/MillForm";
 
 export default function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
@@ -68,6 +72,42 @@ export default function App() {
                 >
                   Trips
                 </NavLink>
+                <NavLink
+                  to="/driver"
+                  className={({ isActive }) =>
+                    `text-sm ${
+                      isActive
+                        ? "text-blue-700 font-medium"
+                        : "text-gray-600 hover:text-gray-800"
+                    }`
+                  }
+                >
+                  Driver Management
+                </NavLink>
+                <NavLink
+                  to="/vehicle"
+                  className={({ isActive }) =>
+                    `text-sm ${
+                      isActive
+                        ? "text-blue-700 font-medium"
+                        : "text-gray-600 hover:text-gray-800"
+                    }`
+                  }
+                >
+                  Vehicle Management
+                </NavLink>
+                <NavLink
+                  to="/mill"
+                  className={({ isActive }) =>
+                    `text-sm ${
+                      isActive
+                        ? "text-blue-700 font-medium"
+                        : "text-gray-600 hover:text-gray-800"
+                    }`
+                  }
+                >
+                  Mill Management
+                </NavLink>
               </nav>
             </div>
           </header>
@@ -76,7 +116,16 @@ export default function App() {
             <Routes>
               <Route path="/" element={<Dashboard />} />
               <Route path="/planner" element={<TripPlanner />} />
+              <Route path="/driver" element={<DriverManager />} />
+              <Route path="/vehicle" element={<VehicleManager />} />
               <Route path="/trip-list" element={<TripList />} />
+              <Route path="/drivers/new" element={<DriverForm />} />
+              <Route path="/drivers/:id/edit" element={<DriverForm />} />
+              <Route path="/vehicles/new" element={<VehicleForm />} />
+              <Route path="/vehicles/:id/edit" element={<VehicleForm />} />
+              <Route path="/mill" element={<MillManager />} />
+              <Route path="/mills/new" element={<MillForm />} />
+              <Route path="/mills/:id/edit" element={<MillForm />} />
             </Routes>
           </main>
         </div>

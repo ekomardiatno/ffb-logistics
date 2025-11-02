@@ -7,6 +7,19 @@ export const fetchMills = createAsyncThunk("mills/fetch", async () => {
   return res.data;
 });
 
+export const createMill = createAsyncThunk("mills/create", async (data: Omit<Mill, "id">) => {
+  const res = await api.post("/mills", data);
+  return res.data;
+});
+
+export const updateMill = createAsyncThunk(
+  "mills/update",
+  async ({ id, data }: { id: string; data: Partial<Mill> }) => {
+    const res = await api.put(`/mills/${id}`, data);
+    return res.data;
+  }
+);
+
 interface MillsState {
   items: Mill[];
   loading: boolean;
@@ -30,6 +43,11 @@ const millsSlice = createSlice({
     builder.addCase(fetchMills.rejected, (state, action) => {
       state.loading = false;
       state.error = action.error.message ?? "Failed to load mills";
+    });
+    builder.addCase(createMill.fulfilled, (s, a) => { s.items.push(a.payload); });
+    builder.addCase(updateMill.fulfilled, (s, a) => {
+      const i = s.items.findIndex(m => m.id === a.payload.id);
+      if (i >= 0) s.items[i] = a.payload;
     });
   }
 });
