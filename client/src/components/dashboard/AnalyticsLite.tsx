@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import Card from "../common/Card";
 import { useAppSelector } from "../../hooks";
+import classNames from "classnames";
 
 export default function AnalyticsLite() {
   const trips = useAppSelector(s => s.trips.items);
@@ -28,8 +29,10 @@ export default function AnalyticsLite() {
   return (
     <Card title="7-Day Trip Analytics">
       <div className="grid gap-2">
-        {data.map(row => (
-          <div key={row.date} className="grid grid-cols-4 items-center gap-3 text-sm">
+        {data.map((row, index) => (
+          <div key={row.date} className={classNames("grid grid-cols-1 md:grid-cols-4 items-center gap-3 text-sm", {
+            "mt-3 md:mt-0": index > 0
+          })}>
             <div className="text-gray-600">{row.date}</div>
             <Bar label="Scheduled" value={row.scheduled} />
             <Bar label="In Progress" value={row.in_progress} />
