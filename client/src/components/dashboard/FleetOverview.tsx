@@ -2,14 +2,15 @@ import { useEffect } from "react";
 import Stat from "../common/Stat";
 import Card from "../common/Card";
 import Loader from "../common/Loader";
-import { useAppDispatch, useAppSelector } from "../../hooks";
 import { fetchVehicles } from "../../store/vehiclesSlice";
 import { fetchDrivers } from "../../store/driversSlice";
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch, RootState } from "../../store";
 
 export default function FleetOverview() {
-  const dispatch = useAppDispatch();
-  const { items: vehicles, loading: vLoading } = useAppSelector(s => s.vehicles);
-  const { items: drivers, loading: dLoading } = useAppSelector(s => s.drivers);
+  const dispatch = useDispatch<AppDispatch>();
+  const { items: vehicles, loading: vLoading } = useSelector((s: RootState) => s.vehicles);
+  const { items: drivers, loading: dLoading } = useSelector((s: RootState) => s.drivers);
 
   useEffect(() => {
     dispatch(fetchVehicles());
@@ -20,7 +21,7 @@ export default function FleetOverview() {
   const assignedDrivers = vehicles.filter(v => v.driverId).length;
   const availableDrivers = drivers.filter(d => d.status === "available").length;
 
-  if (vLoading || dLoading) return <Loader label="Loading fleet overview..." />;
+  if (vLoading || dLoading) return <Loader label={"Loading fleet overview..."} />;
 
   return (
     <div className="grid grid-cols-1 gap-4 md:grid-cols-4">

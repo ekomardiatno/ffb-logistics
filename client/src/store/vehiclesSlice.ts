@@ -57,7 +57,7 @@ export const updateVehicle = createAsyncThunk(
   }
 );
 
-interface VehiclesState {
+export interface VehiclesState {
   items: Vehicle[];
   loading: boolean;
   error?: string | null;

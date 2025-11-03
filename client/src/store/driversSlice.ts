@@ -38,7 +38,7 @@ export const updateDriver = createAsyncThunk(
   }
 );
 
-interface DriversState {
+export interface DriversState {
   items: Driver[];
   loading: boolean;
   error?: string | null;

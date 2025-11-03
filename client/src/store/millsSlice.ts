@@ -28,7 +28,7 @@ export const updateMill = createAsyncThunk(
   }
 );
 
-interface MillsState {
+export interface MillsState {
   items: Mill[];
   loading: boolean;
   error?: string | null;

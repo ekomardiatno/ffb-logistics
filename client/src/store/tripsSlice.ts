@@ -46,7 +46,7 @@ export const updateTrip = createAsyncThunk(
   }
 );
 
-interface TripsState {
+export interface TripsState {
   items: Trip[];
   loading: boolean;
   error?: string | null;
