@@ -24,8 +24,7 @@ export const CreateTripDto = z.object({
         }),
       ]),
     })
-    .array()
-    .nonempty(),
+    .array(),
   estimatedDuration: z.union([
     z.number(),
     z.string().regex(/^(?:\d+|\d*\.\d+)$/, {

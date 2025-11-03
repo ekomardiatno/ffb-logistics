@@ -123,9 +123,12 @@ router.patch("/:id/status", async (req, res, next) => {
         }
       );
     }
-    await trip.update({ status: req.body.status }, {
-      transaction: t
-    });
+    await trip.update(
+      { status: req.body.status },
+      {
+        transaction: t,
+      }
+    );
     await t.commit();
     res.json(trip);
   } catch (err) {
@@ -138,15 +141,31 @@ router.patch("/:id/status", async (req, res, next) => {
 router.put("/:id", async (req, res, next) => {
   const t = await sequelize.transaction();
   try {
-    const { scheduledDate, estimatedDuration, mills } = UpdateTripDto.parse(req.body);
+    const { scheduledDate, estimatedDuration, mills } = UpdateTripDto.parse(
+      req.body
+    );
     const trip = await Trip.findByPk(req.params.id, { transaction: t });
     if (!trip) return res.status(404).json({ error: "Trip not found" });
 
     if (scheduledDate || estimatedDuration) {
       await trip.update(
         {
-          ...(scheduledDate ? { scheduledDate: typeof scheduledDate === 'string' ? new Date(scheduledDate): scheduledDate } : {}),
-          ...(estimatedDuration ? { estimatedDuration: typeof estimatedDuration === 'string' ? Number(estimatedDuration) : estimatedDuration } : {}),
+          ...(scheduledDate
+            ? {
+                scheduledDate:
+                  typeof scheduledDate === "string"
+                    ? new Date(scheduledDate)
+                    : scheduledDate,
+              }
+            : {}),
+          ...(estimatedDuration
+            ? {
+                estimatedDuration:
+                  typeof estimatedDuration === "string"
+                    ? Number(estimatedDuration)
+                    : estimatedDuration,
+              }
+            : {}),
         },
         { transaction: t }
       );
@@ -189,6 +208,48 @@ router.delete("/:id", async (req, res, next) => {
     const trip = await Trip.findByPk(req.params.id, { transaction: t });
     if (!trip) return res.status(404).json({ error: "Trip not found" });
     await Collection.destroy({ where: { tripId: trip.id }, transaction: t });
+    const lastTripDriver = await Trip.findOne({
+      where: {
+        driverId: trip.driverId,
+        status: ["in_progress", "scheduled"],
+      },
+      order: [["scheduledDate", "DESC"]],
+    });
+    const lastTripVehicle = await Trip.findOne({
+      where: {
+        vehicleId: trip.vehicleId,
+        status: ["in_progress", "scheduled"],
+      },
+      order: [["scheduledDate", "DESC"]],
+    });
+    if (
+      (trip.status === "in_progress" || trip.status === "scheduled") &&
+      lastTripDriver?.id === trip.id
+    ) {
+      await Driver.update(
+        { status: "available" },
+        {
+          where: {
+            id: trip.driverId,
+          },
+          transaction: t,
+        }
+      );
+    }
+    if (
+      (trip.status === "in_progress" || trip.status === "scheduled") &&
+      lastTripVehicle?.id === trip.id
+    ) {
+      await Vehicle.update(
+        { status: "idle" },
+        {
+          where: {
+            id: trip.vehicleId,
+          },
+          transaction: t,
+        }
+      );
+    }
     await trip.destroy({ transaction: t });
     await t.commit();
     res.json({ success: true });
